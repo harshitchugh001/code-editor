@@ -78,7 +78,7 @@ const EditorPage = () => {
       socketRef.current.off(ACTIONS.SEND_MESSAGE);
       socketRef.current.disconnect();
     };
-  }, []);
+  }, [location.state?.username,reactNavigator,roomId]);
 
   async function copyRoomId() {
     try {
@@ -125,7 +125,8 @@ const EditorPage = () => {
     outputLabel.classList.add("clickedLabel");
   };
 
-  const runCode = () => {
+  const runCode = async () => {
+    console.log("runn")
     const lang = document.getElementById("languageOptions").value;
     const input = document.getElementById("input").value;
     const code = codeRef.current;
@@ -138,37 +139,32 @@ const EditorPage = () => {
     encodedParams.append("Input", input);
 
     const options = {
-      method: "POST",
-      url: "https://code-compiler.p.rapidapi.com/v2",
+      method: 'POST',
+      url: 'https://online-code-compiler.p.rapidapi.com/v1/',
       headers: {
-        "content-type": "application/x-www-form-urlencoded",
-        "X-RapidAPI-Key": process.env.REACT_APP_API_KEY,
-        "X-RapidAPI-Host": "code-compiler.p.rapidapi.com",
+        'content-type': 'application/json',
+        'X-RapidAPI-Key': 'fc1436839dmsh4636140699a5fa8p1a025cjsn2d460169e3dc',
+        'X-RapidAPI-Host': 'online-code-compiler.p.rapidapi.com'
       },
-      data: encodedParams,
+      data: {
+        language: lang,
+        version: 'latest',
+        code: code,
+        input: input
+      }
     };
+    
+    try {
+      console.log(options);
+      console.log("try");
+      const response = await axios.request(options);
+      console.log(response.data);
+    } catch (error) {
+      console.log("error");
+      console.error(error);
+    }
+};
 
-    console.log(options);
-
-    axios
-      .request(options)
-      .then(function (response) {
-        let message = response.data.Result;
-        if (message === null) {
-          message = response.data.Errors;
-        }
-        outputClicked();
-        document.getElementById("input").value = message;
-        toast.dismiss();
-        toast.success("Code compilation complete");
-      })
-      .catch(function (error) {
-        toast.dismiss();
-        toast.error("Code compilation unsuccessful");
-        document.getElementById("input").value =
-          "Something went wrong, Please check your code and input.";
-      });
-  };
 
   const sendMessage = () => {
     if (document.getElementById("inputBox").value === "") return;
@@ -205,11 +201,11 @@ const EditorPage = () => {
           </div>
         </div>
         <label>
-          Select Language:
+          Select Language :
           <select id="languageOptions" className="seLang" defaultValue="17">
             <option value="1">C#</option>
             <option value="4">Java</option>
-            <option value="5">Python</option>
+            <option value="python3">Python</option>
             <option value="6">C (gcc)</option>
             <option value="7">C++ (gcc)</option>
             <option value="8">PHP</option>
@@ -264,7 +260,7 @@ const EditorPage = () => {
           id="input"
           className="inputArea textarea-style"
           placeholder="Enter your input here"
-        ></textarea>
+        > </textarea>
       </div>
 
       <div className="chatWrap">
